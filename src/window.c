@@ -1139,7 +1139,7 @@ const char *WindowNewSceneFromFast64(const char *fn, struct Scene **dst, bool sh
 		return errstr;
 	}
 	
-	const char *resultPath = ExePath(WHERE_TMP "test_scene.zscene");
+	const char *resultPath = ExePath(WHERE_TMP "scene.zscene");
 	if (dst)
 		*dst = SceneFromFilenamePredictRooms(resultPath);
 	else
@@ -2570,13 +2570,25 @@ void WindowMainLoop(const char *sceneFn)
 	
 	// glfw window creation
 	// --------------------
-	window = glfwCreateWindow(WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT, "z64scene", NULL, NULL);
+	window = glfwCreateWindow(WINDOW_INITIAL_WIDTH, WINDOW_INITIAL_HEIGHT, "Hylian Coolbox", NULL, NULL);
 	if (window == NULL)
 	{
 		Die("Failed to create GLFW window");
 		glfwTerminate();
 		return;
 	}
+	
+
+    // Load the icon
+    GLFWimage images[1];
+    images[0].pixels = stbi_load("resource/icon.png", &images[0].width, &images[0].height, 0, 4); // RGBA format
+    if (images[0].pixels) {
+        glfwSetWindowIcon(window, 1, images);
+        stbi_image_free(images[0].pixels); // Free the image memory after setting the icon
+    } else {
+        printf("Failed to load icon!\n");
+    }
+	
 	glfwMakeContextCurrent(window);
 	
 	// callbacks

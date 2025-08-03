@@ -419,7 +419,7 @@ static const char *Fast64_CompileSource(const char *syms, const char *root, cons
 	
 	// compile .c -> .o
 	sprintf(command,
-		"\"%s""mips64-gcc\"" EXE_SUFFIX
+		"%s""mips64-gcc" EXE_SUFFIX
 		" -G0"
 		" -o \"%s\""
 		" -c \"%s\""
@@ -437,7 +437,7 @@ static const char *Fast64_CompileSource(const char *syms, const char *root, cons
 	
 	// link .o -> .elf
 	sprintf(command,
-		"\"%s""mips64-ld\"" EXE_SUFFIX " --emit-relocs -o \"%s\" \"%s\" -T \"%s\" 2> \"%s\"",
+		"%s""mips64-ld" EXE_SUFFIX " --emit-relocs -o \"%s\" \"%s\" -T \"%s\" 2> \"%s\"",
 		MIPS64_BINUTILS_PATH, WHERE_TMP_ELF, WHERE_TMP_O, WHERE_TMP_LD, WHERE_COMPILER_LOG
 	);
 	if (system(command))
@@ -445,7 +445,7 @@ static const char *Fast64_CompileSource(const char *syms, const char *root, cons
 	
 	// dump .elf -> .bin
 	sprintf(command,
-		"\"%s""mips64-objcopy\"" EXE_SUFFIX " -R .MIPS.abiflags -O binary \"%s\" \"%s\" 2> \"%s\"",
+		"%s""mips64-objcopy" EXE_SUFFIX " -R .MIPS.abiflags -O binary \"%s\" \"%s\" 2> \"%s\"",
 		MIPS64_BINUTILS_PATH, WHERE_TMP_ELF, ExePath(out), WHERE_COMPILER_LOG
 	);
 	if (system(command))
@@ -496,12 +496,12 @@ const char *Fast64_CompileSceneAndRooms(const char *root, sb_array(char *, sourc
 	}
 	FileFree(file);
 	
-	if ((error = Fast64_CompileSource(syms, root, scenePath, WHERE_TMP "test_scene.zscene")))
+	if ((error = Fast64_CompileSource(syms, root, scenePath, WHERE_TMP "scene.zscene")))
 		goto L_earlyExit;
 	
 	// dump symbols
 	sprintf(syms,
-		"\"%s""mips64-objdump\"" EXE_SUFFIX " -t \"%s\" > \"%s\"",
+		"%s""mips64-objdump" EXE_SUFFIX " -t \"%s\" > \"%s\"",
 		MIPS64_BINUTILS_PATH, WHERE_TMP_ELF, WHERE_COMPILER_LOG
 	);
 	if (system(syms))
@@ -535,7 +535,7 @@ const char *Fast64_CompileSceneAndRooms(const char *root, sb_array(char *, sourc
 			continue;
 		if ((room = strstr(path, "_room_"))) {
 			sscanf(room, "_room_%d", &idx);
-			sprintf(fn, "%s" "test_room_%d.zmap", WHERE_TMP, idx);
+			sprintf(fn, "%s" "room_%d.zmap", WHERE_TMP, idx);
 			if ((error = Fast64_CompileSource(syms, root, path, fn)))
 				goto L_earlyExit;
 		}

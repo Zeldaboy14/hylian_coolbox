@@ -154,6 +154,8 @@ struct GuiSettings
 	bool showSidebar = true;
 	bool showImGuiDemoWindow = false;
 	bool showSettings = false;
+	bool showControls = false;
+	bool showAbout = false;
 	
 	ActorDatabase actorDatabase;
 	ObjectDatabase objectDatabase;
@@ -2595,7 +2597,9 @@ static const LinkedStringFunc *gSidebarTabsZobj[] = {
 			}
 			
 			snprintf(previewText, sizeof(previewText), "%08x", obj->meshes[gGui->zobjCurrentDl].segAddr);
-			if (ImGui::BeginCombo("Display List##ZobjDlist##ZobjDlistCombo", previewText, 0))
+			ImGui::Text("Display List");
+			//Originally, Display List was rendered here. ## has since been added to preserve this unique indicator instead of blanking.
+			if (ImGui::BeginCombo("##Display List##ZobjDlist##ZobjDlistCombo", previewText, 0))
 			{
 				for (int i = 0; i < numMeshes; ++i)
 				{
@@ -2630,8 +2634,9 @@ static const LinkedStringFunc *gSidebarTabsZobj[] = {
 				return;
 			}
 			
+			ImGui::Text("Skeleton");
 			snprintf(previewText, sizeof(previewText), "%08x", obj->skeletons[gGui->zobjCurrentSkel].segAddr);
-			if (ImGui::BeginCombo("Skeleton##ZobjSkelViewCombo", previewText, 0))
+			if (ImGui::BeginCombo("##Skeleton##ZobjSkelViewCombo", previewText, 0))
 			{
 				for (int i = 0; i < numSkels; ++i)
 				{
@@ -2654,11 +2659,12 @@ static const LinkedStringFunc *gSidebarTabsZobj[] = {
 				ImGui::Text("No animations detected");
 				return;
 			}
-			
+
+			ImGui::Text("Animation");		
 			struct ObjectAnimation *anim = &obj->animations[gGui->zobjCurrentAnim];
 			if (anim->object) snprintf(previewText, sizeof(previewText), "%08x", anim->segAddr);
 			else strcpy(previewText, bindPose);
-			if (ImGui::BeginCombo("Animation##ZobjSkelViewCombo", previewText, 0))
+			if (ImGui::BeginCombo("##Animation##ZobjSkelViewCombo", previewText, 0))
 			{
 				for (int i = 0; i < numAnims; ++i)
 				{
@@ -2742,7 +2748,7 @@ static void DrawSidebar(void)
 	}
 	else if (!gGuiSettings.project && !gScene && ImGui::Begin("Sidebar", 0, window_flags))
 	{
-		ImGui::Text("No file has been loaded.");
+			ImGui::Text("No file has been loaded.");
 	}
 	else if (ImGui::Begin("Sidebar", 0, window_flags))
 	{
@@ -3005,6 +3011,7 @@ static void SetStyleTheme(void)
 		case STYLE_THEME_DARK: ImGui::StyleColorsDark(); break;
 		case STYLE_THEME_LIGHT: ImGui::StyleColorsLight(); break;
 		case STYLE_THEME_CLASSIC: ImGui::StyleColorsClassic(); break;
+		case STYLE_THEME_Z64TOOLS: ImGui::StyleColorsZ64Tools(); break;
 	}
 }
 
@@ -3029,9 +3036,111 @@ static void DrawSettings(void)
 	}
 	if (ImGui::TreeNode("Theme"))
 	{
-		if (ImGui::Combo("##Theme", &gIni.style.theme, "Dark\0""Light\0""Classic\0"))
+		if (ImGui::Combo("##Theme", &gIni.style.theme, "Dark\0""Light\0""Classic\0""Z64Tools\0"))
 			SetStyleTheme();
 	}
+	
+	ImGui::End();
+}
+
+const char *z64scene_flavor(void)
+{
+	static const char *ben[]={
+		"no more 17 fire temple collisions", 
+		"now written with imgui", 
+		"12 years for textured zobjs", 
+		"and don't forget it!", 
+		"saguinetti would be proud", 
+		"majora mask map compiling someday", 
+		"texgen is very evil", 
+		"no nudity maps please", 
+		"still a kokiri in spot04", 
+		"now 1000000%+ more open source", 
+		"thanks again Dragorn for the blender plugin"
+	};
+	return ben[rand()%(sizeof(ben)/sizeof(*ben))];
+}
+
+const char *z64scene_drink(void)
+{
+	static const char *drowned[]={
+		"			Hylian Coolbox", 
+		"			  z64scene", 
+		"		    Utility of Time", 
+		"			 zzviewer-rrrw", 
+		"		    Hylian Twoolbox", 
+		"			 Sharp Ocarina", 
+		"		   model_convert.py", 
+	};
+	return drowned[rand()%(sizeof(drowned)/sizeof(*drowned))];
+}
+
+static void DrawControls(void)
+{
+	ImGui::SetNextWindowSizeConstraints(ImVec2(562, 502), ImVec2(FLT_MAX, FLT_MAX));
+	ImGui::Begin("Controls", &gGuiSettings.showControls);
+	ImGui::TextWrapped(
+		"W 						Zoom In\n"
+		"S 						Zoom Out\n"
+		"A						Move Left\n"
+		"D						Move Right\n"
+		"Q						Move Up\n"
+		"R						Move Down\n"
+		"\n"
+	);
+	ImGui::End();
+}
+
+
+static void DrawAbout(void)
+{
+	ImGui::SetNextWindowSizeConstraints(ImVec2(302, 172), ImVec2(FLT_MAX, FLT_MAX));
+	ImGui::Begin("About", &gGuiSettings.showAbout);
+	bool isWindowOpen = ImGui::Begin("About");
+	static bool windowPreviouslyOpen = false;  // Track window state
+    static const char* currentFlavor = nullptr;  // Store the current flavor text
+    static const char* currentDrink = nullptr;  // Store the current flavor text
+    if (isWindowOpen) {
+        if (!windowPreviouslyOpen) {
+            // The window was just opened; fetch a new flavor
+			currentDrink = z64scene_drink();
+        }
+
+        // Display the current flavor
+        if (currentDrink) {
+			ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+            ImGui::Text("%s", currentDrink);
+			ImGui::PopStyleVar();
+        }
+    }
+	ImGui::TextWrapped(
+		//"			 Hylian Coolbox\n"
+		"			   Ver. 0.5.2\n"
+		"   https://github.com/z64me/z64scene\n"
+		"\n"
+		"			Developed by z64me.\n"
+		"	  With assistance from Aria Hiro\n"
+		"			 and Zeldaboy14.\n"
+		"\n"
+		" ZMAP/ZSCENE conversions with OBJEX2 are\n"
+		"	   done via Z64Convert by z64me.\n"
+		"\n"
+	);
+    if (isWindowOpen) {
+        if (!windowPreviouslyOpen) {
+            // The window was just opened; fetch a new flavor
+            currentFlavor = z64scene_flavor();
+        }
+
+        // Display the current flavor
+        if (currentFlavor) {
+            ImGui::Text("%s", currentFlavor);
+        }
+    }
+	srand(time(NULL));
+	
+    // Update window state
+    windowPreviouslyOpen = isWindowOpen;
 	
 	ImGui::End();
 }
@@ -3146,6 +3255,15 @@ static void DrawMenuBar(void)
 		if (ImGui::MenuItem("Settings"))
 		{
 			gGuiSettings.showSettings = !gGuiSettings.showSettings;
+		}
+		if (ImGui::BeginMenu("Help"))
+		{
+			if (ImGui::MenuItem("Controls", NULL, &gGuiSettings.showControls));
+			//gGuiSettings.showAbout = !gGuiSettings.showAbout;
+			
+			if (ImGui::MenuItem("About", NULL, &gGuiSettings.showAbout));
+			
+			ImGui::EndMenu();
 		}
 		ImGui::Text("%.02f fps", ImGui::GetIO().Framerate);
 		
@@ -3367,6 +3485,13 @@ extern "C" void GuiDraw(GLFWwindow *window, struct Scene *scene, struct GuiInter
 	
 	if (gGuiSettings.showSettings)
 		DrawSettings();
+	
+	if (gGuiSettings.showControls)
+		DrawControls();
+	
+	if (gGuiSettings.showAbout)
+		DrawAbout();
+	
 	
 	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 	if (gGuiSettings.showImGuiDemoWindow)
